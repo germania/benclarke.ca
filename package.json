@@ -1,0 +1,17 @@
+{
+  "name": "benclarke.ca",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "canvas-sketch": "^0.7.4"
+  },
+  "dependencies": {
+    "three": "^0.134.0"
+  }
+}
