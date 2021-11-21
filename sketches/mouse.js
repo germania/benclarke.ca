@@ -93,8 +93,9 @@ const sketch = ({ context }) => {
 
   const b = new THREE.Group();
   b.renderOrder = 2;
-  light.target = b;
   scene.add(b);
+  
+  light.target = b;
 
   const gltfLoader = new THREE.GLTFLoader();
   gltfLoader.load('./b.glb', (model) => {
@@ -157,6 +158,9 @@ const sketch = ({ context }) => {
     render({ time, deltaTime }) {
       mouse.prev.copy(mouse.current);
       mouse.current.lerp(mouse.target, 0.1);
+
+      console.log(mouse.current.distanceTo(mouse.prev));
+
       pingpong.render();
       // renderer.render(osScene, osCamera);
       renderer.render(scene, camera);

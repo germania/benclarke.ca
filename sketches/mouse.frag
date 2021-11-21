@@ -15,7 +15,7 @@ void main() {
 	vec2 velocity = (mouse - prevMouse) * 10.0;
 	float size = min(0.2, length(mouse - prevMouse) * 3.0);
 
-	vec3 stamp = vec3(velocity, pow(1.0 - min(1.0, length(velocity)), 0.1));
+	vec3 stamp = vec3(velocity, max(0.6, pow(1.0 - min(1.0, length(velocity)), 3.0)));
 	float falloff = smoothstep(size, 0.0, length(mouse));
 	color.rgb = mix(color.rgb * 0.98, stamp, vec3(falloff));
 
