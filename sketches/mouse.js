@@ -2,6 +2,9 @@ const canvasSketch = require('canvas-sketch');
 
 import * as THREE from 'three';
 
+global.THREE = THREE;
+require('three/examples/js/loaders/GLTFLoader');
+
 import mouseVert from './mouse.vert';
 import mouseFrag from './mouse.frag';
 
@@ -13,7 +16,11 @@ import PingPong from './pingpong';
 const settings = {
   animate: true,
   context: 'webgl',
-  attributes: { antialias: true }
+  attributes: {
+    antialias: false,
+    transparent: false,
+    powerPreference: 'high-performance'
+  }
 };
 
 const sketch = ({ context }) => {
@@ -35,8 +42,8 @@ const sketch = ({ context }) => {
 
   const momo = (e) => {
     mouse.target.set(
-      e.clientX / window.innerWidth - 0.5,
-      -(e.clientY / window.innerHeight - 0.5)
+      e.clientX / window.innerWidth * 2 - 1,
+      -(e.clientY / window.innerHeight * 2 - 1)
     );
   };
 
@@ -55,16 +62,20 @@ const sketch = ({ context }) => {
       },
       uBackground: {
         value: null
+      },
+      uAspect: {
+        value: 1.0
       }
     }
   });
 
   const mat = new THREE.ShaderMaterial({
+    depthTest: false,
     vertexShader: distortVert,
     fragmentShader: distortFrag,
     uniforms: {
       uTexture: {
-        value: new THREE.TextureLoader().load('./trees.jpg')
+        value: new THREE.TextureLoader().load('./nebula2.jpg')
       },
       uMouse: {
         value: null
@@ -73,7 +84,35 @@ const sketch = ({ context }) => {
   });
 
   const mesh = new THREE.Mesh(geo, mat);
+  mesh.renderOrder = 1;
   scene.add(mesh);
+
+  const light = new THREE.DirectionalLight(0xaaaaaa, 1);
+  light.position.set(2, 2, 2);
+  scene.add(light);
+
+  const b = new THREE.Group();
+  b.renderOrder = 2;
+  light.target = b;
+  scene.add(b);
+
+  const gltfLoader = new THREE.GLTFLoader();
+  gltfLoader.load('./b.glb', (model) => {
+    const obj = model.scene.children[0];
+
+    const meshMat = new THREE.MeshPhysicalMaterial({
+      opacity: 1,
+      transmission: 1.0,
+      thickness: 1,
+      color: 0xffffff,
+      metalness: 0.01,
+      roughness: 0.2
+    });
+
+    obj.material = meshMat;
+    obj.scale.setScalar(0.5);
+    b.add(obj);
+  });
 
   const osScene = new THREE.Scene();
   const osCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.01, 100);
@@ -84,18 +123,21 @@ const sketch = ({ context }) => {
   const doRender = (read, write) => {
     osMat.uniforms.uBackground.value = read.texture;
     renderer.setRenderTarget(write);
+    renderer.clear();
     renderer.render(osScene, osCamera);
     renderer.setRenderTarget(null);
 
-    mat.uniforms.uMouse.value = write.texture;
+    mat.uniforms.uMouse.value = read.texture;
   };
 
-  const pingpong = PingPong(doRender, [ 1024, 1024 ], {
-      minFilter: THREE.NearestFilter,
-      magFilter: THREE.NearestFilter,
+  const pingpong = PingPong(doRender, [ 128, 128 ], {
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
       type: THREE.HalfFloatType
   });
+
+  pingpong.init(renderer);
 
   return {
     resize({ pixelRatio, viewportWidth, viewportHeight }) {
@@ -103,13 +145,25 @@ const sketch = ({ context }) => {
       renderer.setSize(viewportWidth, viewportHeight);
       camera.aspect = viewportWidth / viewportHeight;
       camera.updateProjectionMatrix();
+
+      osMat.uniforms.uAspect.value = camera.aspect;
+      
+      const frustum = 2 * Math.abs(camera.position.z) * Math.tan(camera.fov * 0.5 * Math.PI / 180);
+      mesh.scale.y = frustum * 0.5;
+      mesh.scale.x = frustum * camera.aspect * 0.5;
+
     },
 
     render({ time, deltaTime }) {
       mouse.prev.copy(mouse.current);
       mouse.current.lerp(mouse.target, 0.1);
       pingpong.render();
+      // renderer.render(osScene, osCamera);
       renderer.render(scene, camera);
+      
+      b.rotation.y = mouse.current.x * Math.PI * 0.1;
+      b.rotation.x = mouse.current.y * Math.PI * -0.1;
+
     },
 
     unload() {

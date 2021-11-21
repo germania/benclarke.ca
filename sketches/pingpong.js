@@ -8,6 +8,16 @@ const PingPong = (callback, [ w, h ], options) => {
 	let read = bufB;
 	let write = bufA;
 
+	const init = (renderer) => {
+		renderer.setRenderTarget(bufA);
+		renderer.clear(true);
+
+		renderer.setRenderTarget(bufB);
+		renderer.clear(true);
+
+		renderer.setRenderTarget(null);
+	};
+
 	const render = () => {
 		callback(read, write);
 		const tmp = read;
@@ -16,6 +26,7 @@ const PingPong = (callback, [ w, h ], options) => {
 	};
 
 	return {
+		init,
 		render
 	};
 
