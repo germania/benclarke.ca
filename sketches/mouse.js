@@ -4,6 +4,7 @@ import * as THREE from 'three';
 
 global.THREE = THREE;
 require('three/examples/js/loaders/GLTFLoader');
+require('three/examples/js/loaders/EXRLoader');
 
 import mouseVert from './mouse.vert';
 import mouseFrag from './mouse.frag';
@@ -97,23 +98,32 @@ const sketch = ({ context }) => {
   // light.target = b;
 
   const gltfLoader = new THREE.GLTFLoader();
+  const meshMat = new THREE.MeshPhysicalMaterial({
+    transmission: 1,
+    thickness: 1,
+    metalness: 0.0,
+    roughness: 0.05,
+    ior: 1.2,
+    reflectivity: 0.7,
+    // flatShading: true,
+    color: 0xc0c6ca
+  });
+
   gltfLoader.load('./b.glb', (model) => {
     const obj = model.scene.children[0];
-
-    const meshMat = new THREE.MeshPhysicalMaterial({
-      transmission: 1,
-      thickness: 1,
-      metalness: 0.01,
-      roughness: 0.05,
-      ior: 1.2,
-      // flatShading: true,
-      // color: 0xbbbbff
-    });
-
-    obj.material = meshMat;
-
     obj.scale.setScalar(0.5);
+    obj.material = meshMat;
     b.add(obj);
+  });
+
+  const pmremGenerator = new THREE.PMREMGenerator(renderer);
+  pmremGenerator.compileEquirectangularShader();
+
+  let exrBackground;
+  new THREE.EXRLoader().load('./env-map.exr', (tex) => {
+    const exrRT = pmremGenerator.fromEquirectangular(tex);
+    exrBackground = exrRT.texture;
+    tex.dispose();
   });
 
   const osScene = new THREE.Scene();
@@ -124,12 +134,17 @@ const sketch = ({ context }) => {
 
   const doRender = (read, write) => {
     osMat.uniforms.uBackground.value = read.texture;
+    mat.uniforms.uMouse.value = read.texture;
+
+    if (meshMat.envMap !== exrBackground) {
+      meshMat.envMap = exrBackground;
+      meshMat.needsUpdate = true;
+    }
+
     renderer.setRenderTarget(write);
     renderer.clear();
     renderer.render(osScene, osCamera);
     renderer.setRenderTarget(null);
-
-    mat.uniforms.uMouse.value = read.texture;
   };
 
   const pingpong = PingPong(doRender, [ 128, 128 ], {
