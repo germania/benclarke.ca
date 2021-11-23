@@ -75,7 +75,7 @@ const sketch = ({ context }) => {
     fragmentShader: distortFrag,
     uniforms: {
       uTexture: {
-        value: new THREE.TextureLoader().load('./nebula2.jpg')
+        value: new THREE.TextureLoader().load('./nebula.jpg')
       },
       uMouse: {
         value: null
