@@ -87,30 +87,31 @@ const sketch = ({ context }) => {
   mesh.renderOrder = 1;
   scene.add(mesh);
 
-  const light = new THREE.DirectionalLight(0xaaaaaa, 1);
-  light.position.set(2, 2, 2);
-  scene.add(light);
-
   const b = new THREE.Group();
   b.renderOrder = 2;
   scene.add(b);
-  
-  light.target = b;
+
+  // const light = new THREE.DirectionalLight(0xaaaaaa, 1);
+  // light.position.set(2, 2, 2);
+  // scene.add(light);
+  // light.target = b;
 
   const gltfLoader = new THREE.GLTFLoader();
   gltfLoader.load('./b.glb', (model) => {
     const obj = model.scene.children[0];
 
     const meshMat = new THREE.MeshPhysicalMaterial({
-      opacity: 1,
-      transmission: 1.0,
+      transmission: 1,
       thickness: 1,
-      color: 0xffffff,
       metalness: 0.01,
-      roughness: 0.2
+      roughness: 0.05,
+      ior: 1.2,
+      // flatShading: true,
+      // color: 0xbbbbff
     });
 
     obj.material = meshMat;
+
     obj.scale.setScalar(0.5);
     b.add(obj);
   });
@@ -138,7 +139,7 @@ const sketch = ({ context }) => {
       type: THREE.HalfFloatType
   });
 
-  pingpong.init(renderer);
+  // pingpong.init(renderer);
 
   return {
     resize({ pixelRatio, viewportWidth, viewportHeight }) {
@@ -159,14 +160,12 @@ const sketch = ({ context }) => {
       mouse.prev.copy(mouse.current);
       mouse.current.lerp(mouse.target, 0.1);
 
-      console.log(mouse.current.distanceTo(mouse.prev));
-
       pingpong.render();
       // renderer.render(osScene, osCamera);
       renderer.render(scene, camera);
       
-      b.rotation.y = mouse.current.x * Math.PI * 0.1;
-      b.rotation.x = mouse.current.y * Math.PI * -0.1;
+      b.rotation.y = mouse.current.x * Math.PI * 0.15;
+      b.rotation.x = mouse.current.y * Math.PI * -0.15;
 
     },
 
