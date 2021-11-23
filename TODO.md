@@ -1,0 +1,6 @@
+- EXR env map
+- Limit trail colours to red/blue ("red shift")
+- Tonemapping
+- Port to vue (or svelte?)
+- 2D UI
+- Mobile interactions
