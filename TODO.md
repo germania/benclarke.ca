@@ -1,4 +1,4 @@
-- EXR env map
+- EXR env map *IN until I decide I don't want it*
 - Limit trail colours to red/blue ("red shift")
 - Tonemapping
 - Port to vue (or svelte?)
