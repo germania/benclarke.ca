@@ -29,6 +29,8 @@ const sketch = ({ context }) => {
     context
   });
 
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
   renderer.setClearColor('#000', 1);
 
   const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 10000);
@@ -92,15 +94,15 @@ const sketch = ({ context }) => {
   b.renderOrder = 2;
   scene.add(b);
 
-  // const light = new THREE.DirectionalLight(0xaaaaaa, 1);
-  // light.position.set(2, 2, 2);
-  // scene.add(light);
-  // light.target = b;
+  const light = new THREE.DirectionalLight(0xaaaaaa, 1);
+  light.position.set(2, 2, 2);
+  scene.add(light);
+  light.target = b;
 
   const gltfLoader = new THREE.GLTFLoader();
   const meshMat = new THREE.MeshPhysicalMaterial({
     transmission: 1,
-    thickness: 1,
+    thickness: 0.6,
     metalness: 0.0,
     roughness: 0.05,
     ior: 1.2,
@@ -123,6 +125,8 @@ const sketch = ({ context }) => {
   new THREE.EXRLoader().load('./env-map.exr', (tex) => {
     const exrRT = pmremGenerator.fromEquirectangular(tex);
     exrBackground = exrRT.texture;
+    scene.background = exrBackground;
+    scene.environment = exrBackground;
     tex.dispose();
   });
 
@@ -136,11 +140,6 @@ const sketch = ({ context }) => {
     osMat.uniforms.uBackground.value = read.texture;
     mat.uniforms.uMouse.value = read.texture;
 
-    if (meshMat.envMap !== exrBackground) {
-      meshMat.envMap = exrBackground;
-      meshMat.needsUpdate = true;
-    }
-
     renderer.setRenderTarget(write);
     renderer.clear();
     renderer.render(osScene, osCamera);
@@ -153,8 +152,6 @@ const sketch = ({ context }) => {
       format: THREE.RGBAFormat,
       type: THREE.HalfFloatType
   });
-
-  // pingpong.init(renderer);
 
   return {
     resize({ pixelRatio, viewportWidth, viewportHeight }) {

@@ -1,6 +1,6 @@
-- EXR env map *IN until I decide I don't want it*
 - Limit trail colours to red/blue ("red shift")
-- Tonemapping
 - Port to vue (or svelte?)
 - 2D UI
 - Mobile interactions
+- EXR env map *IN until I decide I don't want it*
+- Tonemapping *IN*
